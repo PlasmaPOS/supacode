@@ -289,6 +289,14 @@ struct SupacodeApp: App {
         values.githubCLI = GithubCLIClient.remote(sshClient: sshClient)
         values.zmxClient = ZmxClient.remote(sshClient: sshClient)
         values.worktreeInfoWatcher = WorktreeInfoWatcherClient.remote(sshClient: sshClient)
+        // Slices 8.5 + 8.6: side-channel clients that aren't strictly required
+        // to render the app but ARE required for Finder reveal + drag-drop to
+        // do the right thing on remote paths. Both have safe `.unavailable`
+        // fallbacks (Finder bridge returns false → caller falls back to the
+        // local NSWorkspace; upload bridge throws → UI fails loud) so omitting
+        // them never crashes, but in remote mode we want the live wiring.
+        values.remoteOpenClient = RemoteOpenClient.live(sshClient: sshClient, sshHost: host)
+        values.remoteFileUploadClient = RemoteFileUploadClient.live(sshHost: host)
       }
     }
   }
