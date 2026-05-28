@@ -69,7 +69,21 @@ done
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 LOCAL_WT="${REPO_ROOT}/Resources/git-wt/wt"
-LOCAL_ZMX="${REPO_ROOT}/ThirdParty/zmx/zig-out/bin/zmx"  # if user has built it
+# zmx lives in different places depending on how it was built:
+#   - ThirdParty/zmx/zig-out/bin/zmx  → from a direct `zig build` in the submodule
+#   - .build/zmx/bin/zmx              → from the Tuist/make build (lipo'd universal)
+# Prefer the Tuist artifact since the supacode build always produces it.
+LOCAL_ZMX_CANDIDATES=(
+  "${REPO_ROOT}/.build/zmx/bin/zmx"
+  "${REPO_ROOT}/ThirdParty/zmx/zig-out/bin/zmx"
+)
+LOCAL_ZMX=""
+for candidate in "${LOCAL_ZMX_CANDIDATES[@]}"; do
+  if [[ -x "$candidate" ]]; then
+    LOCAL_ZMX="$candidate"
+    break
+  fi
+done
 
 log() {
   echo "→ $*" >&2
@@ -99,7 +113,10 @@ log "Reachable ✓"
 
 OS="$(run_ssh "uname -s")"
 case "${OS}" in
-  Darwin) PKG=brew; PKG_INSTALL="brew install" ;;
+  # HOMEBREW_NO_AUTO_UPDATE=1 skips the formula-metadata refresh that can
+  # take 5+ minutes on stale brew installs. Bootstrap is idempotent — users
+  # who want fresh formulae can run `brew update` themselves later.
+  Darwin) PKG=brew; PKG_INSTALL="HOMEBREW_NO_AUTO_UPDATE=1 brew install" ;;
   Linux)
     if run_ssh "command -v apt-get >/dev/null"; then
       PKG=apt; PKG_INSTALL="sudo apt-get install -y"
@@ -157,16 +174,20 @@ log "wt installed ✓"
 
 # ─── 5. install zmx ─────────────────────────────────────────────────────────
 
-if [[ -f "${LOCAL_ZMX}" ]]; then
-  log "Pushing zmx to ${HOST}:${ZMX_PATH}"
+if [[ -n "${LOCAL_ZMX}" && -x "${LOCAL_ZMX}" ]]; then
+  log "Pushing zmx to ${HOST}:${ZMX_PATH} (from ${LOCAL_ZMX})"
   ZMX_DIR=$(dirname "${ZMX_PATH}")
   run_ssh "mkdir -p ${ZMX_DIR}"
   run_scp "${LOCAL_ZMX}" "${ZMX_PATH}"
   run_ssh "chmod +x ${ZMX_PATH}"
   log "zmx installed ✓"
 else
-  log "Local zmx binary not found at ${LOCAL_ZMX}"
-  log "  (build it first: cd ThirdParty/zmx && zig build -Drelease)"
+  log "Local zmx binary not found — checked:"
+  for candidate in "${LOCAL_ZMX_CANDIDATES[@]}"; do
+    log "    - ${candidate}"
+  done
+  log "  Build it first: \`make build-app\` (produces .build/zmx/bin/zmx) or"
+  log "  \`cd ThirdParty/zmx && zig build -Drelease\` (produces zig-out/bin/zmx)"
   log "  Skipping zmx push — remote terminal sessions won't persist until you"
   log "  build and push zmx separately."
   PARTIAL=1
