@@ -461,6 +461,12 @@ struct SupacodeApp: App {
           NSWorkspace.shared.open(url)
         }
         .help("Submit GitHub Issue")
+        // FORK: Remote Mode menu — folded into Help group to stay within
+        // SwiftUI's @CommandsBuilder variadic limit. UX-wise the placement
+        // is fine: "Remote Mode" is a configuration item users find via
+        // search or the Help section.
+        Divider()
+        RemoteModeMenuButton()
       }
       CommandGroup(replacing: .appTermination) {
         Button("Quit Supacode") {
@@ -494,6 +500,13 @@ struct SupacodeApp: App {
     .handlesExternalEvents(matching: [])
     .windowToolbarStyle(.unified)
     .defaultSize(width: 720, height: 640)
+    .restorationBehavior(.disabled)
+    Window("Remote Mode", id: WindowID.remoteSettings) {
+      RemoteSettingsView()
+    }
+    .handlesExternalEvents(matching: [])
+    .windowToolbarStyle(.unified)
+    .defaultSize(width: 520, height: 460)
     .restorationBehavior(.disabled)
   }
 }
