@@ -274,6 +274,22 @@ struct SupacodeApp: App {
       // process. Tests that take a TestStore for AppFeature inject their
       // own clock and still override this.
       values.continuousClock = ContinuousClock()
+
+      // FORK: Remote-mode dependency injection. Reads `~/.supacode/remote.json`
+      // at app startup and, when mode = .remote, swaps the live git/github/zmx/
+      // worktreeInfoWatcher clients for their `.remote(sshClient:)` variants
+      // so every read+write goes through SSH to the configured host. Per the
+      // design doc, mode is launch-time only — changes in the Remote Settings
+      // sheet take effect on next launch.
+      let remoteSettings = RemoteSettingsStore.loaded()
+      if case .remote = remoteSettings.mode, let host = remoteSettings.host {
+        let sshClient = SSHClient.live(host: host)
+        values.sshClient = sshClient
+        values.gitClient = GitClientDependency.remote(sshClient: sshClient)
+        values.githubCLI = GithubCLIClient.remote(sshClient: sshClient)
+        values.zmxClient = ZmxClient.remote(sshClient: sshClient)
+        values.worktreeInfoWatcher = WorktreeInfoWatcherClient.remote(sshClient: sshClient)
+      }
     }
   }
 
