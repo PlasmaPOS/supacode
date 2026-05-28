@@ -54,8 +54,8 @@ public struct RemoteSettingsView: View {
 
         Text(
           mode == .remote
-            ? "Supacode will route all git, gh, terminal, and worktree operations over SSH to the configured remote host. The local machine becomes a thin UI client."
-            : "Supacode operates against the local filesystem as usual."
+            ? "Vortex Code will route all git, gh, terminal, and worktree operations over SSH to the configured remote host. The local machine becomes a thin UI client."
+            : "Vortex Code operates against the local filesystem as usual."
         )
         .font(.caption)
         .foregroundStyle(.secondary)

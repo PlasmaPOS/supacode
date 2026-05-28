@@ -312,10 +312,10 @@ public struct SettingsFeature {
         let message: String
         if let errorMessage, !errorMessage.isEmpty {
           message =
-            "Supacode cannot send system notifications.\n\n"
+            "Vortex Code cannot send system notifications.\n\n"
             + "Error: \(errorMessage)"
         } else {
-          message = "Supacode cannot send system notifications while permission is denied."
+          message = "Vortex Code cannot send system notifications while permission is denied."
         }
         state.alert = AlertState {
           TextState("Enable Notifications in System Settings")
