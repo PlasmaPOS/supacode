@@ -198,10 +198,16 @@ let project = Project(
       )
     ),
     .target(
+      // FORK: Tuist target name stays `supacode` because renaming it would
+      // cascade into every `import supacode` and every test target reference
+      // — high blast radius for no functional gain. Identity is set via
+      // productName + bundleId instead so the .app filename and macOS
+      // dedupe key are both unique to Vortex Code.
       name: "supacode",
       destinations: .macOS,
       product: .app,
-      bundleId: "app.supabit.supacode",
+      productName: "Vortex Code",
+      bundleId: "nyc.vortex.code",
       deploymentTargets: .macOS("26.0"),
       infoPlist: .file(path: "supacode/Info.plist"),
       resources: appResources,

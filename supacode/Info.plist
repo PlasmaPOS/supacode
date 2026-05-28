@@ -13,9 +13,9 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleDisplayName</key>
-	<string>Supacode</string>
+	<string>Vortex Code</string>
 	<key>CFBundleName</key>
-	<string>Supacode</string>
+	<string>Vortex Code</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -63,22 +63,26 @@
 	<string>$(POSTHOG_HOST)</string>
 	<key>SentryDSN</key>
 	<string>$(SENTRY_DSN)</string>
-	<key>SUFeedURL</key>
-    <string>https://supacode.sh/download/latest/appcast.xml</string>
-	<key>SUPublicEDKey</key>
-	<string>eBdTbl+6sR8gxO1zyzyvdQHuJrXMLxD31oCc+JoW5jo=</string>
+	<!-- FORK: Sparkle auto-update DISABLED for Vortex Code. The upstream
+	     appcast would replace this binary with the unmodified supacode build
+	     (no remote mode). When Vortex publishes its own appcast, restore
+	     SUFeedURL + SUPublicEDKey here and flip these flags back to true. -->
 	<key>SUEnableAutomaticChecks</key>
-	<true/>
+	<false/>
 	<key>SUAutomaticallyUpdate</key>
-	<true/>
+	<false/>
+	<!-- FORK: deeplink scheme renamed `supacode` → `vortexcode` so links from
+	     upstream supacode don't get intercepted by this fork (and vice versa).
+	     Anything that hardcodes `supacode://` URLs needs updating; current
+	     callers all go through the AppShortcuts builder which is bundle-aware. -->
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
 			<key>CFBundleURLName</key>
-			<string>sh.supacode.deeplink</string>
+			<string>nyc.vortex.code.deeplink</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>supacode</string>
+				<string>vortexcode</string>
 			</array>
 		</dict>
 	</array>
@@ -86,9 +90,9 @@
 	<array>
 		<dict>
 			<key>UTTypeIdentifier</key>
-			<string>sh.supacode.ghosttySurfaceId</string>
+			<string>nyc.vortex.code.ghosttySurfaceId</string>
 			<key>UTTypeDescription</key>
-			<string>Supacode Ghostty Surface Identifier</string>
+			<string>Vortex Code Ghostty Surface Identifier</string>
 			<key>UTTypeConformsTo</key>
 			<array>
 				<string>public.data</string>
