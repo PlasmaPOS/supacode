@@ -616,9 +616,25 @@ struct RemoteWtRunner: Sendable {
   // MARK: - Internal: git + wt invocation
 
   /// Run `wt <args>` from `cwd` on the remote.
+  ///
+  /// **Tilde handling:** if `wtPath` starts with `~/`, we leave it UNQUOTED so
+  /// the remote shell expands it to `$HOME`. Quoting it would defeat tilde
+  /// expansion and produce literal `~/.local/bin/wt`, which the shell can't
+  /// exec ("no such file or directory"). Same logic applies to `cwd`.
   private func runWt(args: [String], cwd: String) async throws -> SSHClient.ExecResult {
-    let cmd = "cd \(shellQuote(cwd)) && \(shellQuote(wtPath)) \(args.map(shellQuote).joined(separator: " "))"
+    let cmd = "cd \(quoteAllowingTilde(cwd)) && \(quoteAllowingTilde(wtPath)) \(args.map(shellQuote).joined(separator: " "))"
     return try await sshClient.exec(["sh", "-c", cmd], .seconds(30))
+  }
+
+  /// Like `shellQuote` but preserves leading `~/` for shell tilde expansion.
+  /// Everything after the `~/` is single-quoted so embedded spaces / quotes
+  /// in the path body still survive the shell parse.
+  private func quoteAllowingTilde(_ path: String) -> String {
+    if path.hasPrefix("~/") {
+      let rest = String(path.dropFirst(2))
+      return "~/\(shellQuote(rest))"
+    }
+    return shellQuote(path)
   }
 
   /// Run `git <args>` on the remote. The `-C <path>` form is preserved in
