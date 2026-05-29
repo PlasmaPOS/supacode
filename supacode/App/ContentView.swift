@@ -59,7 +59,7 @@ struct ContentView: View {
           .repositories(
             .presentAlert(
               title: "Unable to open folders",
-              message: "Supacode could not read the selected folders."
+              message: "Vortex Code could not read the selected folders."
             )
           )
         )

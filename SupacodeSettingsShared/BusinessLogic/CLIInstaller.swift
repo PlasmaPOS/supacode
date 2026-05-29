@@ -33,7 +33,7 @@ nonisolated struct CLIInstaller {
     let src = shellEscape(bundledPath)
     try runPrivileged(
       "mkdir -p \(dir) && rm -f \(dst) && ln -s \(src) \(dst)",
-      prompt: "Supacode needs administrator access to install the CLI to /usr/local/bin."
+      prompt: "Vortex Code needs administrator access to install the CLI to /usr/local/bin."
     )
   }
 
@@ -41,7 +41,7 @@ nonisolated struct CLIInstaller {
     guard isInstalled() else { return }
     try runPrivileged(
       "rm -f \(shellEscape(Self.installPath))",
-      prompt: "Supacode needs administrator access to uninstall the CLI from /usr/local/bin."
+      prompt: "Vortex Code needs administrator access to uninstall the CLI from /usr/local/bin."
     )
   }
 

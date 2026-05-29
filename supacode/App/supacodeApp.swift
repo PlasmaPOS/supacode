@@ -274,6 +274,30 @@ struct SupacodeApp: App {
       // process. Tests that take a TestStore for AppFeature inject their
       // own clock and still override this.
       values.continuousClock = ContinuousClock()
+
+      // FORK: Remote-mode dependency injection. Reads `~/.supacode/remote.json`
+      // at app startup and, when mode = .remote, swaps the live git/github/zmx/
+      // worktreeInfoWatcher clients for their `.remote(sshClient:)` variants
+      // so every read+write goes through SSH to the configured host. Per the
+      // design doc, mode is launch-time only — changes in the Remote Settings
+      // sheet take effect on next launch.
+      let remoteSettings = RemoteSettingsStore.loaded()
+      if case .remote = remoteSettings.mode, let host = remoteSettings.host {
+        let sshClient = SSHClient.live(host: host)
+        values.sshClient = sshClient
+        values.gitClient = GitClientDependency.remote(sshClient: sshClient)
+        values.githubCLI = GithubCLIClient.remote(sshClient: sshClient)
+        values.zmxClient = ZmxClient.remote(sshClient: sshClient)
+        values.worktreeInfoWatcher = WorktreeInfoWatcherClient.remote(sshClient: sshClient)
+        // Slices 8.5 + 8.6: side-channel clients that aren't strictly required
+        // to render the app but ARE required for Finder reveal + drag-drop to
+        // do the right thing on remote paths. Both have safe `.unavailable`
+        // fallbacks (Finder bridge returns false → caller falls back to the
+        // local NSWorkspace; upload bridge throws → UI fails loud) so omitting
+        // them never crashes, but in remote mode we want the live wiring.
+        values.remoteOpenClient = RemoteOpenClient.live(sshClient: sshClient, sshHost: host)
+        values.remoteFileUploadClient = RemoteFileUploadClient.live(sshHost: host)
+      }
     }
   }
 
@@ -402,7 +426,7 @@ struct SupacodeApp: App {
   }
 
   var body: some Scene {
-    Window("Supacode", id: WindowID.main) {
+    Window("Vortex Code", id: WindowID.main) {
       GhosttyColorSchemeSyncView(ghostty: ghostty) {
         ContentView(store: store, terminalManager: terminalManager)
           .environment(ghosttyShortcuts)
@@ -428,7 +452,7 @@ struct SupacodeApp: App {
       }
       UpdateCommands(store: store.scope(state: \.updates, action: \.updates))
       CommandGroup(replacing: .singleWindowList) {
-        Button("Supacode") {
+        Button("Vortex Code") {
           NSApplication.shared.surfaceMainWindow()
         }
         .appKeyboardShortcut(AppShortcuts.showMainWindow.effective(from: store.settings.shortcutOverrides))
@@ -445,13 +469,19 @@ struct SupacodeApp: App {
           NSWorkspace.shared.open(url)
         }
         .help("Submit GitHub Issue")
+        // FORK: Remote Mode menu — folded into Help group to stay within
+        // SwiftUI's @CommandsBuilder variadic limit. UX-wise the placement
+        // is fine: "Remote Mode" is a configuration item users find via
+        // search or the Help section.
+        Divider()
+        RemoteModeMenuButton()
       }
       CommandGroup(replacing: .appTermination) {
-        Button("Quit Supacode") {
+        Button("Quit Vortex Code") {
           store.send(.requestQuit)
         }
         .keyboardShortcut("q")
-        .help("Quit Supacode (⌘Q)")
+        .help("Quit Vortex Code (⌘Q)")
       }
     }
     Window("Settings", id: WindowID.settings) {
@@ -478,6 +508,13 @@ struct SupacodeApp: App {
     .handlesExternalEvents(matching: [])
     .windowToolbarStyle(.unified)
     .defaultSize(width: 720, height: 640)
+    .restorationBehavior(.disabled)
+    Window("Remote Mode", id: WindowID.remoteSettings) {
+      RemoteSettingsView()
+    }
+    .handlesExternalEvents(matching: [])
+    .windowToolbarStyle(.unified)
+    .defaultSize(width: 520, height: 460)
     .restorationBehavior(.disabled)
   }
 }

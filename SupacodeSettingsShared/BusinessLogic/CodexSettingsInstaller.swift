@@ -298,8 +298,8 @@ nonisolated enum CodexSettingsInstallerError: Error, Equatable, LocalizedError {
       "Codex must be installed and available in your login shell before Supacode can install hooks."
     case .enableHooksFailed(let details):
       details.isEmpty
-        ? "Supacode could not enable the Codex hooks feature."
-        : "Supacode could not enable the Codex hooks feature: \(details)"
+        ? "Vortex Code could not enable the Codex hooks feature."
+        : "Vortex Code could not enable the Codex hooks feature: \(details)"
     case .invalidEventHooks(let event):
       "Codex hooks use an unsupported shape for \(event)."
     case .invalidHooksObject:

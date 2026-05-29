@@ -27,7 +27,7 @@ public struct AppearanceSettingsView: View {
           }
         }
         Toggle(isOn: $store.terminalThemeSyncEnabled) {
-          Text("Supacode Terminal Theme")
+          Text("Vortex Code Terminal Theme")
           Text("When off, honors your Ghostty config theme.")
         }
       }

@@ -468,6 +468,9 @@ struct WorktreeDetailView: View {
       ToolbarSpacer(.flexible)
 
       ToolbarItemGroup {
+        // Remote-mode SSH health pill. Renders EmptyView in local mode so it
+        // costs zero pixels for users who never enable remote mode.
+        RemoteConnectionBanner()
         ToolbarStatusView(
           toast: toolbarState.statusToast,
           pullRequest: toolbarState.pullRequest
